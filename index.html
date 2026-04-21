@@ -55,6 +55,12 @@
   .logo-hero svg { width: 100%; height: 100%; display: block; }
   .countdown { font-size: 11px; color: var(--text-dim); letter-spacing: 1px; }
   .countdown strong { color: var(--red); font-weight: 700; }
+  .countdown-wrap { display: flex; align-items: center; gap: 8px; }
+  .sync-dot { font-size: 10px; line-height: 1; opacity: 0.5; transition: opacity 0.25s, color 0.25s; cursor: help; }
+  .sync-dot.sync-synced { color: #4a8; opacity: 0.55; }
+  .sync-dot.sync-busy { color: var(--text-dim); opacity: 1; animation: syncpulse 1s ease-in-out infinite; }
+  .sync-dot.sync-offline, .sync-dot.sync-error { color: var(--red); opacity: 0.85; }
+  @keyframes syncpulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
 
   .macro-bar { height: 4px; background: var(--bg-elev); border-radius: 2px; overflow: hidden; margin: 8px 0 10px; position: relative; }
   .macro-fill { height: 100%; background: linear-gradient(90deg, var(--red-deep), var(--red), var(--red-glow)); border-radius: 2px; transition: width 0.6s cubic-bezier(.2,.8,.2,1); box-shadow: 0 0 10px var(--red); }
@@ -196,7 +202,10 @@
       <div class="logo-mini" id="logoMini"></div>
       <div class="title">70.3 BELGRADE</div>
     </div>
-    <div class="countdown" id="countdown">— DAYS</div>
+    <div class="countdown-wrap">
+      <div class="countdown" id="countdown">— DAYS</div>
+      <span class="sync-dot" id="syncStatus" title="Syncing…">●</span>
+    </div>
   </div>
   <div class="macro-bar"><div class="macro-fill" id="macroFill"></div></div>
   <div class="stats-row">
@@ -409,11 +418,98 @@ function loadState() {
 }
 
 function saveState() {
+  state.updatedAt = Date.now();
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch (e) {
     console.error('Save failed', e);
   }
+  schedulePush();
+}
+
+// ── Cross-device sync (JSONBin.io) ───────────────────────────────────────
+// Public repo, accepted tradeoff: worst-case someone trashes training state.
+// No PII, one bin, last-write-wins by updatedAt.
+const BIN_ID = '69e7ae2c36566621a8d8b9f0';
+const MASTER_KEY = '$2a$10$.W/amtjPdqR9PV4RM9H2fOSelhp7jCfpNUzhzffNi2kSzdBBZIMbW';
+const API_BASE = 'https://api.jsonbin.io/v3/b/' + BIN_ID;
+
+let pushTimer = null;
+let isPushing = false;
+
+function setSyncStatus(s) {
+  const el = document.getElementById('syncStatus');
+  if (!el) return;
+  const map = {
+    synced:  { cls: 'sync-synced',  t: 'Synced' },
+    busy:    { cls: 'sync-busy',    t: 'Syncing…' },
+    offline: { cls: 'sync-offline', t: 'Offline — changes saved locally' },
+    error:   { cls: 'sync-error',   t: 'Sync error — changes saved locally' }
+  };
+  const m = map[s] || map.synced;
+  el.className = 'sync-dot ' + m.cls;
+  el.title = m.t;
+}
+
+async function syncPull() {
+  setSyncStatus('busy');
+  try {
+    const r = await fetch(API_BASE + '/latest', { headers: { 'X-Master-Key': MASTER_KEY } });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const body = await r.json();
+    const remote = body.record || {};
+    const localAt = state.updatedAt || 0;
+    const remoteAt = remote.updatedAt || 0;
+    if (remoteAt > localAt && remote.completed && remote.swaps) {
+      state.completed = remote.completed;
+      state.swaps = remote.swaps;
+      state.updatedAt = remoteAt;
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+      renderWeek();
+      renderOverview();
+      renderStats();
+      setSyncStatus('synced');
+    } else if (localAt > remoteAt) {
+      schedulePush();
+    } else {
+      setSyncStatus('synced');
+    }
+  } catch (e) {
+    setSyncStatus('offline');
+  }
+}
+
+async function syncPush() {
+  if (isPushing) return;
+  isPushing = true;
+  setSyncStatus('busy');
+  try {
+    const payload = {
+      completed: state.completed,
+      swaps: state.swaps,
+      updatedAt: state.updatedAt || Date.now()
+    };
+    const r = await fetch(API_BASE, {
+      method: 'PUT',
+      headers: {
+        'X-Master-Key': MASTER_KEY,
+        'Content-Type': 'application/json',
+        'X-Bin-Versioning': 'false'
+      },
+      body: JSON.stringify(payload)
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    setSyncStatus('synced');
+  } catch (e) {
+    setSyncStatus('error');
+  } finally {
+    isPushing = false;
+  }
+}
+
+function schedulePush() {
+  if (pushTimer) clearTimeout(pushTimer);
+  pushTimer = setTimeout(syncPush, 1000);
 }
 
 function getDayWorkouts(wkIdx, dayIdx) {
@@ -914,6 +1010,11 @@ function setAppIcons() {
   renderWeek();
   renderOverview();
   renderStats();
+  syncPull();
+  setInterval(syncPull, 30000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) syncPull(); });
+  window.addEventListener('online', syncPull);
+  window.addEventListener('offline', () => setSyncStatus('offline'));
 })();
 </script>
 </body>
