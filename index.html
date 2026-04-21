@@ -436,8 +436,9 @@ const API_BASE = 'https://api.jsonbin.io/v3/b/' + BIN_ID;
 
 let pushTimer = null;
 let isPushing = false;
+let lastSyncError = '';
 
-function setSyncStatus(s) {
+function setSyncStatus(s, detail) {
   const el = document.getElementById('syncStatus');
   if (!el) return;
   const map = {
@@ -448,18 +449,31 @@ function setSyncStatus(s) {
   };
   const m = map[s] || map.synced;
   el.className = 'sync-dot ' + m.cls;
-  el.title = m.t;
+  el.title = detail ? m.t + ' (' + detail + ')' : m.t;
+}
+
+async function apiFetch(url, opts) {
+  const r = await fetch(url, opts);
+  if (!r.ok) {
+    const body = await r.text().catch(() => '');
+    const err = new Error('HTTP ' + r.status + ' ' + r.statusText + (body ? ' — ' + body.slice(0, 200) : ''));
+    err.status = r.status;
+    throw err;
+  }
+  return r.json();
 }
 
 async function syncPull() {
   setSyncStatus('busy');
   try {
-    const r = await fetch(API_BASE + '/latest', { headers: { 'X-Master-Key': MASTER_KEY } });
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    const body = await r.json();
+    const body = await apiFetch(API_BASE + '/latest', {
+      method: 'GET',
+      headers: { 'X-Master-Key': MASTER_KEY }
+    });
     const remote = body.record || {};
     const localAt = state.updatedAt || 0;
     const remoteAt = remote.updatedAt || 0;
+    console.log('[sync] pull ok, localAt=' + localAt + ' remoteAt=' + remoteAt);
     if (remoteAt > localAt && remote.completed && remote.swaps) {
       state.completed = remote.completed;
       state.swaps = remote.swaps;
@@ -475,7 +489,9 @@ async function syncPull() {
       setSyncStatus('synced');
     }
   } catch (e) {
-    setSyncStatus('offline');
+    lastSyncError = e.message;
+    console.error('[sync] pull failed:', e);
+    setSyncStatus(navigator.onLine === false ? 'offline' : 'error', e.message);
   }
 }
 
@@ -489,19 +505,20 @@ async function syncPush() {
       swaps: state.swaps,
       updatedAt: state.updatedAt || Date.now()
     };
-    const r = await fetch(API_BASE, {
+    await apiFetch(API_BASE, {
       method: 'PUT',
       headers: {
         'X-Master-Key': MASTER_KEY,
-        'Content-Type': 'application/json',
-        'X-Bin-Versioning': 'false'
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify(payload)
     });
-    if (!r.ok) throw new Error('HTTP ' + r.status);
+    console.log('[sync] push ok, updatedAt=' + payload.updatedAt);
     setSyncStatus('synced');
   } catch (e) {
-    setSyncStatus('error');
+    lastSyncError = e.message;
+    console.error('[sync] push failed:', e);
+    setSyncStatus(navigator.onLine === false ? 'offline' : 'error', e.message);
   } finally {
     isPushing = false;
   }
