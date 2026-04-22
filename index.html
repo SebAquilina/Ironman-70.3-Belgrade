@@ -188,9 +188,95 @@
   .reset-btn { margin: 20px auto 0; display: block; padding: 10px 18px; font-size: 10px; letter-spacing: 1.5px; background: transparent; color: var(--text-mute); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; }
   .reset-btn:active { background: var(--red-deep); color: var(--text); }
 
+  /* Modal */
+  .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index: 1000; display: none; align-items: flex-end; justify-content: center; padding: 0; }
+  .modal-backdrop.show { display: flex; animation: fadeIn 0.2s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUp { from { transform: translateY(24px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .modal { background: linear-gradient(180deg, var(--bg-elev), var(--bg-elev-2) 60%, var(--bg)); border: 1px solid var(--border); border-radius: 20px 20px 0 0; width: 100%; max-width: 520px; max-height: 92vh; overflow-y: auto; padding: 18px 16px 28px; position: relative; box-shadow: 0 -12px 40px rgba(229,9,20,0.15); animation: slideUp 0.26s cubic-bezier(.2,.8,.2,1); }
+  @media (min-width: 560px) { .modal-backdrop { align-items: center; } .modal { border-radius: 20px; } }
+  .modal-close { position: absolute; top: 10px; right: 10px; width: 32px; height: 32px; border-radius: 50%; background: var(--bg-elev-2); border: 1px solid var(--border); color: var(--text-dim); font-size: 18px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .modal-close:active { background: var(--red-deep); color: var(--text); }
+  .modal-head { display: flex; align-items: center; gap: 10px; padding-right: 40px; margin-bottom: 4px; }
+  .modal-title { font-size: 15px; font-weight: 800; color: var(--text); line-height: 1.25; }
+  .modal-sub { font-size: 10px; letter-spacing: 1.2px; color: var(--text-mute); margin-top: 2px; }
+  .modal-desc { font-size: 11px; color: var(--text-dim); line-height: 1.55; padding: 10px 12px; background: var(--bg-elev-2); border: 1px dashed var(--border); border-radius: 10px; margin: 10px 0 14px; }
+
+  .section-label { font-size: 9px; font-weight: 800; letter-spacing: 1.8px; color: var(--red-glow); margin: 14px 0 8px; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .form-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .field label { font-size: 9px; font-weight: 700; letter-spacing: 1px; color: var(--text-mute); }
+  .field label .unit { color: var(--text-dim); font-weight: 500; letter-spacing: 0.5px; margin-left: 4px; }
+  .field input, .field select, .field textarea { background: var(--bg-elev-2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 9px 10px; font-size: 13px; font-family: inherit; width: 100%; min-width: 0; }
+  .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--red); box-shadow: 0 0 0 2px rgba(229,9,20,0.18); }
+  .field textarea { resize: vertical; min-height: 60px; font-size: 12px; }
+  .field.computed input { color: var(--text-dim); background: linear-gradient(135deg, var(--bg-elev-2), var(--bg-elev)); border-style: dashed; }
+  .field-hint { font-size: 9px; color: var(--text-mute); letter-spacing: 0.5px; margin-top: 2px; }
+  .adj-badge { display: inline-block; margin-left: 6px; padding: 1px 5px; font-size: 8.5px; letter-spacing: 1px; border-radius: 4px; background: var(--red-deep); color: var(--red-glow); border: 1px solid var(--red-dim); vertical-align: middle; }
+
+  .btn-row { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .btn { flex: 1; min-width: 120px; padding: 11px 12px; font-size: 11px; font-weight: 800; letter-spacing: 1.2px; border-radius: 10px; cursor: pointer; border: 1px solid var(--border); background: var(--bg-elev-2); color: var(--text); transition: all 0.15s; }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: linear-gradient(135deg, var(--red), var(--red-glow)); border-color: var(--red); color: white; box-shadow: 0 4px 14px rgba(229,9,20,0.3); }
+  .btn-ghost { background: transparent; color: var(--text-dim); }
+  .btn-danger { background: transparent; color: var(--red-glow); border-color: var(--red-dim); }
+  .btn-done { background: linear-gradient(135deg, #0e7c5a, #10b981); border-color: #0e7c5a; color: white; }
+  .btn-done.is-done { background: linear-gradient(135deg, var(--red-deep), var(--red)); border-color: var(--red); }
+
+  .planned-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px; background: var(--bg-elev-2); border: 1px solid var(--border); border-radius: 6px; font-size: 10px; color: var(--text-dim); letter-spacing: 0.5px; margin-right: 6px; margin-top: 4px; }
+  .planned-chip strong { color: var(--text); font-weight: 700; }
+
+  /* Summary modal */
+  .sum-hero { padding: 14px; background: linear-gradient(135deg, var(--red-deep), #1a0406); border: 1px solid var(--red-dim); border-radius: 12px; margin-bottom: 14px; position: relative; overflow: hidden; }
+  .sum-hero::before { content: ''; position: absolute; top: -50%; right: -20%; width: 200px; height: 200px; background: radial-gradient(circle, var(--red) 0%, transparent 70%); opacity: 0.15; }
+  .sum-ring { display: flex; align-items: center; gap: 14px; position: relative; z-index: 1; }
+  .ring-outer { width: 74px; height: 74px; position: relative; flex-shrink: 0; }
+  .ring-outer svg { transform: rotate(-90deg); width: 100%; height: 100%; }
+  .ring-bg { fill: none; stroke: rgba(255,255,255,0.1); stroke-width: 8; }
+  .ring-fg { fill: none; stroke: url(#ringGrad); stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 0.6s cubic-bezier(.2,.8,.2,1); filter: drop-shadow(0 0 6px var(--red)); }
+  .ring-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 900; color: var(--text); }
+  .sum-hero-info { flex: 1; min-width: 0; }
+  .sum-hero-title { font-size: 11px; letter-spacing: 1.5px; color: var(--red-glow); font-weight: 800; }
+  .sum-hero-stat { font-size: 20px; font-weight: 900; color: var(--text); margin-top: 3px; line-height: 1.1; }
+  .sum-hero-sub { font-size: 11px; color: var(--text-dim); margin-top: 3px; }
+
+  .disc-row { display: grid; grid-template-columns: 42px 1fr auto; align-items: center; gap: 10px; padding: 9px 10px; background: var(--bg-elev-2); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 6px; }
+  .disc-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; }
+  .disc-mid { min-width: 0; }
+  .disc-name { font-size: 11px; font-weight: 800; letter-spacing: 1px; color: var(--text); }
+  .disc-stat { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+  .disc-stat strong { color: var(--text); font-weight: 700; }
+  .disc-bar { height: 4px; background: var(--bg); border-radius: 2px; overflow: hidden; margin-top: 5px; }
+  .disc-bar-fill { height: 100%; border-radius: 2px; transition: width 0.6s cubic-bezier(.2,.8,.2,1); }
+  .disc-pct { font-size: 13px; font-weight: 800; color: var(--text); min-width: 40px; text-align: right; }
+
+  .day-sum { padding: 9px 10px; background: var(--bg-elev-2); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 5px; }
+  .day-sum-head { display: flex; justify-content: space-between; font-size: 10px; letter-spacing: 1.2px; color: var(--text-mute); font-weight: 700; margin-bottom: 5px; }
+  .day-sum-head .day-sum-date { color: var(--text-dim); letter-spacing: 0; font-weight: 500; }
+  .day-sum-row { font-size: 11px; color: var(--text-dim); padding: 3px 0; display: flex; align-items: center; gap: 6px; line-height: 1.35; }
+  .day-sum-row .tick { display: inline-block; width: 14px; height: 14px; border-radius: 50%; background: var(--bg); border: 1px solid var(--text-mute); flex-shrink: 0; position: relative; }
+  .day-sum-row.done .tick { background: linear-gradient(135deg, var(--red), var(--red-glow)); border-color: var(--red); box-shadow: 0 0 6px var(--red-dim); }
+  .day-sum-row.done .tick::after { content: '✓'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: white; font-size: 9px; font-weight: 900; }
+  .day-sum-row.rest { color: var(--text-mute); font-style: italic; }
+  .day-sum-row .w-name { color: var(--text); font-weight: 600; }
+  .day-sum-row .w-delta { margin-left: auto; font-size: 9px; padding: 2px 5px; border-radius: 4px; letter-spacing: 0.5px; }
+  .delta-over { background: rgba(16,185,129,0.15); color: var(--run); border: 1px solid rgba(16,185,129,0.3); }
+  .delta-under { background: rgba(234,179,8,0.15); color: var(--strength); border: 1px solid rgba(234,179,8,0.3); }
+  .delta-swap { background: rgba(168,85,247,0.15); color: var(--brick); border: 1px solid rgba(168,85,247,0.3); }
+
+  .summary-fab { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 8px 12px 4px; padding: 12px; font-size: 11px; font-weight: 800; letter-spacing: 1.5px; color: white; background: linear-gradient(135deg, var(--red-deep), var(--red)); border: 1px solid var(--red-dim); border-radius: 12px; cursor: pointer; width: calc(100% - 24px); box-shadow: 0 4px 16px rgba(229,9,20,0.2); }
+  .summary-fab:active { transform: scale(0.98); }
+  .summary-fab .fab-icon { font-size: 14px; }
+
+  .workout.adjusted { border-color: var(--red-dim); background: linear-gradient(135deg, rgba(229,9,20,0.05), var(--bg-elev-2)); }
+  .workout.adjusted .workout-title::after { content: ' ADJ'; font-size: 8px; letter-spacing: 1px; color: var(--red-glow); font-weight: 700; background: var(--red-deep); padding: 1px 4px; border-radius: 3px; margin-left: 4px; vertical-align: middle; }
+
   @media (max-width: 360px) {
     .title { font-size: 14px; }
     .workout-title { font-size: 12px; }
+    .form-grid { grid-template-columns: 1fr 1fr; }
   }
 </style>
 </head>
@@ -248,6 +334,10 @@
   </div>
 
   <div class="days" id="days"></div>
+
+  <button class="summary-fab" id="weekSummaryBtn" type="button">
+    <span class="fab-icon">◈</span> VIEW WEEK SUMMARY
+  </button>
 </div>
 
 <div class="overview" id="overviewView">
@@ -282,6 +372,108 @@
   <p><strong style="color:var(--text)">Tap card</strong> to expand description. <strong style="color:var(--text)">Tap circle</strong> to mark done. <strong style="color:var(--text)">Press &amp; hold card</strong> then drag to another day to swap. Progress saves automatically.</p>
 
   <button class="reset-btn" id="resetBtn">RESET ALL PROGRESS</button>
+</div>
+
+<!-- Workout edit modal -->
+<div class="modal-backdrop" id="workoutModal" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true">
+    <button class="modal-close" id="wmClose" aria-label="Close">×</button>
+    <div class="modal-head">
+      <div class="workout-type-icon" id="wmIcon">•</div>
+      <div style="flex:1; min-width:0">
+        <div class="modal-title" id="wmTitle">—</div>
+        <div class="modal-sub" id="wmSub">—</div>
+      </div>
+    </div>
+    <div id="wmPlannedChips" style="margin-top:4px"></div>
+    <div class="modal-desc" id="wmDesc">—</div>
+
+    <div class="section-label">LOG / ADJUST RESULT</div>
+
+    <div class="form-row">
+      <div class="field" style="flex:1">
+        <label>TYPE</label>
+        <select id="wmType">
+          <option value="swim">Swim</option>
+          <option value="bike">Bike</option>
+          <option value="run">Run</option>
+          <option value="brick">Brick</option>
+          <option value="strength">Strength</option>
+          <option value="rest">Rest</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="field" data-field="mins">
+        <label>TIME <span class="unit">min</span></label>
+        <input id="wmMins" type="number" inputmode="decimal" step="0.5" min="0" placeholder="0">
+      </div>
+      <div class="field" data-field="distance">
+        <label>DISTANCE <span class="unit" id="wmDistUnit">km</span></label>
+        <input id="wmDistance" type="number" inputmode="decimal" step="0.1" min="0" placeholder="0">
+      </div>
+      <div class="field" data-field="pace">
+        <label id="wmPaceLabel">PACE <span class="unit" id="wmPaceUnit">min/km</span></label>
+        <input id="wmPace" type="text" inputmode="decimal" placeholder="—">
+      </div>
+    </div>
+    <div class="field-hint" id="wmLinkHint">Edit any two — the third updates automatically.</div>
+
+    <div class="field" style="margin-top:12px">
+      <label>NOTES</label>
+      <textarea id="wmNotes" placeholder="How did it feel? Anything to remember?"></textarea>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-done" id="wmDone">MARK DONE</button>
+      <button class="btn btn-primary" id="wmSave">SAVE</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" id="wmReset">RESET TO PLAN</button>
+      <button class="btn btn-danger" id="wmDelete">REMOVE</button>
+    </div>
+  </div>
+</div>
+
+<!-- Weekly summary modal -->
+<div class="modal-backdrop" id="summaryModal" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true">
+    <button class="modal-close" id="smClose" aria-label="Close">×</button>
+    <svg width="0" height="0" style="position:absolute"><defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ff1a25"/><stop offset="100%" stop-color="#ff6b72"/></linearGradient></defs></svg>
+    <div class="modal-head">
+      <div style="flex:1">
+        <div class="modal-title" id="smTitle">WEEK SUMMARY</div>
+        <div class="modal-sub" id="smSub">—</div>
+      </div>
+    </div>
+
+    <div class="sum-hero">
+      <div class="sum-ring">
+        <div class="ring-outer">
+          <svg viewBox="0 0 80 80">
+            <circle class="ring-bg" cx="40" cy="40" r="34"/>
+            <circle class="ring-fg" id="smRing" cx="40" cy="40" r="34" stroke-dasharray="213.6" stroke-dashoffset="213.6"/>
+          </svg>
+          <div class="ring-text" id="smRingText">0%</div>
+        </div>
+        <div class="sum-hero-info">
+          <div class="sum-hero-title">VOLUME COMPLETED</div>
+          <div class="sum-hero-stat" id="smHeroStat">—</div>
+          <div class="sum-hero-sub" id="smHeroSub">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label">BY DISCIPLINE</div>
+    <div id="smDisciplines"></div>
+
+    <div class="section-label">DAY BY DAY</div>
+    <div id="smDays"></div>
+
+    <div class="section-label" id="smAdjLabel" style="display:none">ADJUSTMENTS THIS WEEK</div>
+    <div id="smAdjustments"></div>
+  </div>
 </div>
 
 <div class="toast" id="toast">WORKOUT CRUSHED</div>
@@ -392,7 +584,7 @@ const weeks = [
     days: [ [rest('Packing day.')], [SWIM_TECH(25, 1000), RUN_EASY(20)], [BIKE_Z2(40, null)], [rest('✈ Travel to Belgrade.')], [SWIM_TECH(20, 800), RUN_EASY(15, null)], [BIKE_Z2(25), rest('Race check-in. Early to bed.')], [w('brick', '🏁 RACE DAY — IRONMAN 70.3 BELGRADE', 330, 'Swim 1.9km · Bike 90km · Run 21.1km. Pacing: swim relaxed, bike at 75–80% FTP / RPE 6–7, run first 3km easy then settle into goal pace. You have trained for this. Go execute.')] ] }
 ];
 
-let state = { completed: {}, swaps: {} };
+let state = { completed: {}, swaps: {}, adjustments: {} };
 let currentWeek = 0;
 let currentView = 'week';
 
@@ -406,9 +598,10 @@ function loadState() {
       state = parsed;
       if (!state.completed) state.completed = {};
       if (!state.swaps) state.swaps = {};
+      if (!state.adjustments) state.adjustments = {};
     }
   } catch (e) {
-    state = { completed: {}, swaps: {} };
+    state = { completed: {}, swaps: {}, adjustments: {} };
   }
   const today = new Date();
   const daysSinceStart = Math.floor((today - START_DATE) / (1000*60*60*24));
@@ -477,6 +670,7 @@ async function syncPull() {
     if (remoteAt > localAt && remote.completed && remote.swaps) {
       state.completed = remote.completed;
       state.swaps = remote.swaps;
+      state.adjustments = remote.adjustments || {};
       state.updatedAt = remoteAt;
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
       renderWeek();
@@ -503,6 +697,7 @@ async function syncPush() {
     const payload = {
       completed: state.completed,
       swaps: state.swaps,
+      adjustments: state.adjustments || {},
       updatedAt: state.updatedAt || Date.now()
     };
     await apiFetch(API_BASE, {
@@ -527,6 +722,116 @@ async function syncPush() {
 function schedulePush() {
   if (pushTimer) clearTimeout(pushTimer);
   pushTimer = setTimeout(syncPush, 1000);
+}
+
+// ── Effective workout (planned + adjustment) ──────────────────────────
+// Adjustments are stored by workout id as { type, mins, distance, notes }.
+// Any field can be null/undefined — missing fields fall back to the plan.
+function getActual(w) {
+  const adj = state.adjustments && state.adjustments[w.id];
+  if (!adj) return { ...w, _adj: false };
+  return {
+    ...w,
+    type: adj.type != null ? adj.type : w.type,
+    mins: adj.mins != null ? adj.mins : w.mins,
+    distance: adj.distance != null ? adj.distance : null,
+    notes: adj.notes || '',
+    _adj: true,
+    _plannedType: w.type,
+    _plannedMins: w.mins
+  };
+}
+function hasAdjustment(w) {
+  const adj = state.adjustments && state.adjustments[w.id];
+  if (!adj) return false;
+  return adj.type != null || adj.mins != null || adj.distance != null || (adj.notes && adj.notes.length);
+}
+
+// ── Pace math ─────────────────────────────────────────────────────────
+// Units per type:
+//   swim: distance = meters, pace = min/100m
+//   bike: distance = km,     pace = km/h (speed)
+//   run/brick: distance = km, pace = min/km
+//   strength/rest: no distance / pace
+function paceUnit(type) {
+  if (type === 'swim') return 'min/100m';
+  if (type === 'bike') return 'km/h';
+  if (type === 'run' || type === 'brick') return 'min/km';
+  return '';
+}
+function distUnit(type) {
+  if (type === 'swim') return 'm';
+  if (type === 'bike' || type === 'run' || type === 'brick') return 'km';
+  return '';
+}
+function hasPace(type) { return ['swim','bike','run','brick'].includes(type); }
+
+// Parse pace string. "MM:SS" or decimal minutes for swim/run; decimal km/h for bike.
+function parsePace(type, str) {
+  if (str == null || str === '') return null;
+  const s = String(str).trim();
+  if (type === 'bike') {
+    const v = parseFloat(s);
+    return isFinite(v) && v > 0 ? v : null;
+  }
+  const m = s.match(/^(\d+):(\d{1,2})$/);
+  if (m) {
+    const min = parseInt(m[1], 10);
+    const sec = parseInt(m[2], 10);
+    if (sec >= 60) return null;
+    return min + sec / 60;
+  }
+  const v = parseFloat(s);
+  return isFinite(v) && v > 0 ? v : null;
+}
+function formatPace(type, v) {
+  if (v == null || !isFinite(v) || v <= 0) return '';
+  if (type === 'bike') return v.toFixed(1);
+  const min = Math.floor(v);
+  const sec = Math.round((v - min) * 60);
+  if (sec === 60) return (min + 1) + ':00';
+  return min + ':' + String(sec).padStart(2, '0');
+}
+
+// Given any two of {mins, distance, pace}, compute the third.
+function computePace(type, mins, dist) {
+  if (!mins || !dist) return null;
+  if (type === 'swim') return (mins / dist) * 100;
+  if (type === 'bike') return dist / (mins / 60);
+  if (type === 'run' || type === 'brick') return mins / dist;
+  return null;
+}
+function computeTime(type, pace, dist) {
+  if (!pace || !dist) return null;
+  if (type === 'swim') return (dist / 100) * pace;
+  if (type === 'bike') return (dist / pace) * 60;
+  if (type === 'run' || type === 'brick') return pace * dist;
+  return null;
+}
+function computeDistance(type, pace, mins) {
+  if (!pace || !mins) return null;
+  if (type === 'swim') return (mins / pace) * 100;
+  if (type === 'bike') return (mins / 60) * pace;
+  if (type === 'run' || type === 'brick') return mins / pace;
+  return null;
+}
+
+// Pull planned distance from the workout title (e.g. "Endurance swim 1800m",
+// "Long ride 1.5h" → no km, so falls back to null).
+function plannedDistanceFromTitle(w) {
+  if (!w || !w.title) return null;
+  const title = w.title;
+  const mSwim = title.match(/(\d{3,5})\s*m\b/i);
+  if (mSwim && (w.type === 'swim')) return parseInt(mSwim[1], 10);
+  const mKm = title.match(/(\d+(?:\.\d+)?)\s*km\b/i);
+  if (mKm) return parseFloat(mKm[1]);
+  return null;
+}
+
+function fmtDist(type, d) {
+  if (d == null || !isFinite(d)) return '';
+  if (type === 'swim') return Math.round(d) + 'm';
+  return (Math.round(d * 10) / 10) + 'km';
 }
 
 function getDayWorkouts(wkIdx, dayIdx) {
@@ -564,7 +869,7 @@ function weekCompletedMinutes(wkIdx) {
   let total = 0;
   getAllDays(wkIdx).forEach(day => {
     day.forEach(w => {
-      if (state.completed[w.id]) total += w.mins || 0;
+      if (state.completed[w.id]) total += getActual(w).mins || 0;
     });
   });
   return total;
@@ -572,7 +877,11 @@ function weekCompletedMinutes(wkIdx) {
 
 function weekSessionCount(wkIdx) {
   let total = 0;
-  getAllDays(wkIdx).forEach(day => day.forEach(w => { if (w.type !== 'rest') total++; }));
+  getAllDays(wkIdx).forEach(day => day.forEach(w => {
+    // Session count is "training sessions planned" — use planned type so switching a run to rest
+    // still counts against the week's scheduled session total.
+    if (w.type !== 'rest') total++;
+  }));
   return total;
 }
 
@@ -596,7 +905,10 @@ function disciplineMinutes(type) {
       day.forEach(w => {
         if (w.type === type || (type === 'bike' && w.type === 'brick')) {
           planned += w.mins;
-          if (state.completed[w.id]) done += w.mins;
+        }
+        if (state.completed[w.id]) {
+          const a = getActual(w);
+          if (a.type === type || (type === 'bike' && a.type === 'brick')) done += a.mins || 0;
         }
       });
     });
@@ -672,27 +984,34 @@ function renderWeek() {
     }
 
     day.forEach((wk) => {
+      const a = getActual(wk);
+      const adjusted = hasAdjustment(wk);
       const wEl = document.createElement('div');
       wEl.className = 'workout';
+      if (adjusted) wEl.classList.add('adjusted');
       wEl.dataset.wkIdx = currentWeek;
       wEl.dataset.dayIdx = dayIdx;
       wEl.dataset.wid = wk.id;
       if (state.completed[wk.id]) wEl.classList.add('completed');
 
+      const typeSwapped = a.type !== wk.type;
+      const displayType = a.type;
+      const displayMins = a.mins || 0;
+      const distChip = (a.distance != null) ? ` <span class="sep">·</span>${fmtDist(displayType, a.distance)}` : '';
+      const swapTag = typeSwapped ? ` <span class="sep">·</span>was ${wk.type}` : '';
+
       wEl.innerHTML = `
         <div class="workout-head">
-          <div class="workout-type-icon ${typeClass(wk.type)}">${typeIcon(wk.type)}</div>
+          <div class="workout-type-icon ${typeClass(displayType)}">${typeIcon(displayType)}</div>
           <div class="workout-main">
             <div class="workout-title">${wk.title}</div>
-            <div class="workout-meta">${wk.type.toUpperCase()}${wk.mins ? `<span class="sep">·</span>${wk.mins}min` : ''}</div>
+            <div class="workout-meta">${displayType.toUpperCase()}${displayMins ? `<span class="sep">·</span>${displayMins}min` : ''}${distChip}${swapTag}</div>
           </div>
           <div class="drag-handle">⋮⋮</div>
           <button class="check-btn" data-wid="${wk.id}" aria-label="Mark done">
             <svg viewBox="0 0 24 24"><polyline points="4,13 10,19 20,6"/></svg>
           </button>
-        </div>
-        <div class="workout-desc">${wk.desc || ''}<button class="remove-btn" data-wid="${wk.id}">REMOVE FROM PLAN</button></div>
-        ${wk.desc ? '<div class="expand-hint">TAP TO EXPAND</div>' : ''}`;
+        </div>`;
       woutsContainer.appendChild(wEl);
       wireWorkoutInteractions(wEl);
     });
@@ -730,19 +1049,11 @@ function wireWorkoutInteractions(wEl) {
     toggleComplete(wEl, wid);
   });
 
-  const removeBtn = wEl.querySelector('.remove-btn');
-  if (removeBtn) {
-    removeBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (confirm('Remove this workout from the plan?')) {
-        deleteWorkoutById(currentWeek, removeBtn.dataset.wid);
-      }
-    });
-  }
-
   wEl.addEventListener('click', (e) => {
-    if (e.target.closest('.check-btn') || e.target.closest('.drag-handle') || e.target.closest('.remove-btn')) return;
-    if (wEl.querySelector('.workout-title')) wEl.classList.toggle('expanded');
+    if (e.target.closest('.check-btn') || e.target.closest('.drag-handle')) return;
+    // Suppress the click fired at the end of a drag gesture.
+    if (wEl._suppressClick) { wEl._suppressClick = false; return; }
+    openWorkoutModal(parseInt(wEl.dataset.wkIdx, 10), parseInt(wEl.dataset.dayIdx, 10), wid);
   });
 
   wireDrag(wEl);
@@ -825,6 +1136,385 @@ function showMilestone(text) {
   m.classList.add('show');
   setTimeout(() => m.classList.remove('show'), 1400);
   if (navigator.vibrate) navigator.vibrate([50, 30, 80, 30, 50]);
+}
+
+// ── Workout edit modal ────────────────────────────────────────────────
+let wmCurrent = null; // { wkIdx, dayIdx, workout }
+const wmEl = {
+  root: null, icon: null, title: null, sub: null, desc: null, plannedChips: null,
+  type: null, mins: null, distance: null, pace: null,
+  distUnit: null, paceUnit: null, paceLabel: null, linkHint: null,
+  notes: null, save: null, reset: null, done: null, del: null
+};
+// Track which fields the user touched most recently, so the third one auto-computes.
+let wmTouch = { mins: 0, distance: 0, pace: 0 };
+
+function wmInit() {
+  wmEl.root = document.getElementById('workoutModal');
+  wmEl.icon = document.getElementById('wmIcon');
+  wmEl.title = document.getElementById('wmTitle');
+  wmEl.sub = document.getElementById('wmSub');
+  wmEl.desc = document.getElementById('wmDesc');
+  wmEl.plannedChips = document.getElementById('wmPlannedChips');
+  wmEl.type = document.getElementById('wmType');
+  wmEl.mins = document.getElementById('wmMins');
+  wmEl.distance = document.getElementById('wmDistance');
+  wmEl.pace = document.getElementById('wmPace');
+  wmEl.distUnit = document.getElementById('wmDistUnit');
+  wmEl.paceUnit = document.getElementById('wmPaceUnit');
+  wmEl.paceLabel = document.getElementById('wmPaceLabel');
+  wmEl.linkHint = document.getElementById('wmLinkHint');
+  wmEl.notes = document.getElementById('wmNotes');
+  wmEl.save = document.getElementById('wmSave');
+  wmEl.reset = document.getElementById('wmReset');
+  wmEl.done = document.getElementById('wmDone');
+  wmEl.del = document.getElementById('wmDelete');
+
+  document.getElementById('wmClose').addEventListener('click', closeWorkoutModal);
+  wmEl.root.addEventListener('click', (e) => { if (e.target === wmEl.root) closeWorkoutModal(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && wmEl.root.classList.contains('show')) closeWorkoutModal();
+  });
+
+  wmEl.type.addEventListener('change', () => { refreshUnitLabels(); autoLink(null); });
+  wmEl.mins.addEventListener('input', () => { wmTouch.mins = Date.now(); autoLink('mins'); });
+  wmEl.distance.addEventListener('input', () => { wmTouch.distance = Date.now(); autoLink('distance'); });
+  wmEl.pace.addEventListener('input', () => { wmTouch.pace = Date.now(); autoLink('pace'); });
+
+  wmEl.save.addEventListener('click', saveAdjustment);
+  wmEl.reset.addEventListener('click', resetAdjustment);
+  wmEl.done.addEventListener('click', () => {
+    if (!wmCurrent) return;
+    const wid = wmCurrent.workout.id;
+    const wEl = document.querySelector('.workout[data-wid="' + wid + '"]');
+    toggleComplete(wEl, wid);
+    updateDoneButton();
+  });
+  wmEl.del.addEventListener('click', () => {
+    if (!wmCurrent) return;
+    if (!confirm('Remove this workout from the plan?')) return;
+    deleteWorkoutById(wmCurrent.wkIdx, wmCurrent.workout.id);
+    closeWorkoutModal();
+  });
+}
+
+function openWorkoutModal(wkIdx, dayIdx, wid) {
+  const day = getAllDays(wkIdx)[dayIdx] || [];
+  const workout = day.find(w => w.id === wid);
+  if (!workout) return;
+  wmCurrent = { wkIdx, dayIdx, workout };
+  const a = getActual(workout);
+  const adj = (state.adjustments && state.adjustments[wid]) || {};
+
+  wmEl.icon.className = 'workout-type-icon ' + typeClass(a.type);
+  wmEl.icon.textContent = typeIcon(a.type);
+  wmEl.title.innerHTML = workout.title + (hasAdjustment(workout) ? '<span class="adj-badge">ADJ</span>' : '');
+  wmEl.sub.textContent = DAYS[dayIdx] + ' · ' + fmtDate(dayDate(wkIdx, dayIdx));
+  wmEl.desc.textContent = workout.desc || 'No description.';
+
+  // Planned chips: original type, duration, and detected distance
+  const plannedDist = plannedDistanceFromTitle(workout);
+  const chips = [
+    '<span class="planned-chip">PLANNED <strong>' + workout.type.toUpperCase() + '</strong></span>',
+    workout.mins ? '<span class="planned-chip"><strong>' + workout.mins + '</strong> min</span>' : '',
+    (plannedDist != null) ? '<span class="planned-chip"><strong>' + fmtDist(workout.type, plannedDist) + '</strong></span>' : ''
+  ].filter(Boolean).join('');
+  wmEl.plannedChips.innerHTML = chips;
+
+  wmEl.type.value = a.type;
+  wmEl.mins.value = (adj.mins != null ? adj.mins : (workout.mins || ''));
+  wmEl.distance.value = (adj.distance != null ? adj.distance : (plannedDist != null ? plannedDist : ''));
+  // Compute a pace from current mins & distance so the user sees something.
+  const mVal = parseFloat(wmEl.mins.value);
+  const dVal = parseFloat(wmEl.distance.value);
+  const pVal = computePace(a.type, mVal, dVal);
+  wmEl.pace.value = pVal != null ? formatPace(a.type, pVal) : '';
+  wmEl.notes.value = adj.notes || '';
+
+  // Reset touch history — treat mins + distance as the "anchors", pace as derived.
+  const now = Date.now();
+  wmTouch = { mins: now - 2, distance: now - 1, pace: 0 };
+
+  refreshUnitLabels();
+  updateDoneButton();
+
+  wmEl.root.classList.add('show');
+  wmEl.root.setAttribute('aria-hidden', 'false');
+}
+
+function closeWorkoutModal() {
+  wmEl.root.classList.remove('show');
+  wmEl.root.setAttribute('aria-hidden', 'true');
+  wmCurrent = null;
+}
+
+function refreshUnitLabels() {
+  const t = wmEl.type.value;
+  const du = distUnit(t);
+  const pu = paceUnit(t);
+  wmEl.distUnit.textContent = du || '—';
+  wmEl.paceUnit.textContent = pu || '—';
+  const paceable = hasPace(t);
+  const hasDist = !!du;
+  wmEl.distance.disabled = !hasDist;
+  wmEl.pace.disabled = !paceable;
+  wmEl.pace.placeholder = t === 'bike' ? 'e.g. 28' : (paceable ? 'e.g. 5:30' : '—');
+  wmEl.linkHint.style.display = paceable ? '' : 'none';
+}
+
+function updateDoneButton() {
+  if (!wmCurrent) return;
+  const done = !!state.completed[wmCurrent.workout.id];
+  wmEl.done.textContent = done ? 'UNMARK DONE' : 'MARK DONE';
+  wmEl.done.classList.toggle('is-done', done);
+}
+
+// Auto-compute whichever field was touched least recently.
+function autoLink(justEdited) {
+  const t = wmEl.type.value;
+  if (!hasPace(t)) return;
+
+  const m = parseFloat(wmEl.mins.value);
+  const d = parseFloat(wmEl.distance.value);
+  const p = parsePace(t, wmEl.pace.value);
+
+  const fields = ['mins', 'distance', 'pace'];
+  const candidates = fields.filter(f => f !== justEdited);
+  // Target = least-recently-touched of the non-edited pair (if no explicit edit, the oldest of all).
+  const pool = justEdited ? candidates : fields;
+  pool.sort((a, b) => (wmTouch[a] || 0) - (wmTouch[b] || 0));
+  const target = pool[0];
+
+  let val = null;
+  if (target === 'mins')        val = computeTime(t, p, d);
+  else if (target === 'distance') val = computeDistance(t, p, m);
+  else if (target === 'pace')    val = computePace(t, m, d);
+
+  if (val == null || !isFinite(val)) return;
+  if (target === 'mins') wmEl.mins.value = Math.round(val * 10) / 10;
+  else if (target === 'distance') wmEl.distance.value = (t === 'swim' ? Math.round(val) : Math.round(val * 10) / 10);
+  else if (target === 'pace') wmEl.pace.value = formatPace(t, val);
+}
+
+function saveAdjustment() {
+  if (!wmCurrent) return;
+  const w = wmCurrent.workout;
+  const t = wmEl.type.value;
+  const mins = parseFloat(wmEl.mins.value);
+  const dist = parseFloat(wmEl.distance.value);
+  const notes = (wmEl.notes.value || '').trim();
+
+  const adj = {};
+  if (t !== w.type) adj.type = t;
+  if (isFinite(mins) && mins !== w.mins) adj.mins = mins;
+  if (isFinite(dist) && dist > 0 && distUnit(t)) adj.distance = dist;
+  if (notes) adj.notes = notes;
+
+  if (Object.keys(adj).length === 0) {
+    delete state.adjustments[w.id];
+  } else {
+    state.adjustments[w.id] = adj;
+  }
+  saveState();
+  renderWeek();
+  renderStats();
+  showToast('ADJUSTMENT SAVED');
+  closeWorkoutModal();
+}
+
+function resetAdjustment() {
+  if (!wmCurrent) return;
+  delete state.adjustments[wmCurrent.workout.id];
+  saveState();
+  renderWeek();
+  renderStats();
+  showToast('RESET TO PLAN');
+  closeWorkoutModal();
+}
+
+// ── Weekly summary ────────────────────────────────────────────────────
+const DISC_META = {
+  swim:     { label: 'SWIM',     color: 'var(--swim)',     bg: 'rgba(59,163,255,0.15)',  border: 'rgba(59,163,255,0.3)',  icon: '〰' },
+  bike:     { label: 'BIKE',     color: 'var(--bike)',     bg: 'rgba(255,90,31,0.15)',   border: 'rgba(255,90,31,0.3)',   icon: '⚙' },
+  run:      { label: 'RUN',      color: 'var(--run)',      bg: 'rgba(16,185,129,0.15)',  border: 'rgba(16,185,129,0.3)',  icon: '➤' },
+  brick:    { label: 'BRICK',    color: 'var(--brick)',    bg: 'rgba(168,85,247,0.15)',  border: 'rgba(168,85,247,0.3)',  icon: '◇' },
+  strength: { label: 'STRENGTH', color: 'var(--strength)', bg: 'rgba(234,179,8,0.15)',   border: 'rgba(234,179,8,0.3)',   icon: '▦' }
+};
+
+function weekSummaryData(wkIdx) {
+  const days = getAllDays(wkIdx);
+  // Aggregate by DISCIPLINE — planned counts against planned type, done against actual type.
+  const disc = {};
+  const ensure = (key) => (disc[key] = disc[key] || { plannedMins: 0, doneMins: 0, plannedDist: 0, doneDist: 0, sessionsPlanned: 0, sessionsDone: 0 });
+
+  let totalPlan = 0, totalDone = 0;
+  let sessionsPlanned = 0, sessionsDone = 0;
+  const adjustments = [];
+  const byDay = [];
+
+  days.forEach((day, di) => {
+    const rows = [];
+    day.forEach(w => {
+      const a = getActual(w);
+      const plannedDist = plannedDistanceFromTitle(w);
+      const actualDist = a.distance != null ? a.distance : null;
+
+      if (w.type !== 'rest') {
+        totalPlan += w.mins || 0;
+        sessionsPlanned++;
+        const key = w.type in DISC_META ? w.type : null;
+        if (key) {
+          ensure(key);
+          disc[key].plannedMins += w.mins || 0;
+          disc[key].sessionsPlanned++;
+          if (plannedDist != null) disc[key].plannedDist += plannedDist;
+        }
+      }
+
+      const done = !!state.completed[w.id];
+      if (done) {
+        totalDone += a.mins || 0;
+        if (a.type !== 'rest') sessionsDone++;
+        const akey = a.type in DISC_META ? a.type : null;
+        if (akey) {
+          ensure(akey);
+          disc[akey].doneMins += a.mins || 0;
+          disc[akey].sessionsDone++;
+          if (actualDist != null) disc[akey].doneDist += actualDist;
+          else if (plannedDist != null && !hasAdjustment(w)) disc[akey].doneDist += plannedDist;
+        }
+      }
+
+      // Build per-day row + collect noteworthy adjustments
+      const row = { workout: w, actual: a, done, plannedDist, actualDist };
+      rows.push(row);
+
+      if (hasAdjustment(w)) {
+        const adj = state.adjustments[w.id];
+        const parts = [];
+        if (adj.type && adj.type !== w.type) parts.push('SWAPPED TO ' + adj.type.toUpperCase());
+        if (adj.mins != null && adj.mins !== w.mins) parts.push((adj.mins > w.mins ? '+' : '') + Math.round(adj.mins - w.mins) + 'min vs plan');
+        if (adj.distance != null) parts.push(fmtDist(a.type, adj.distance));
+        if (adj.notes) parts.push('"' + adj.notes + '"');
+        if (parts.length) adjustments.push({ dayIdx: di, workout: w, actual: a, text: parts.join(' · ') });
+      }
+    });
+    byDay.push({ dayIdx: di, rows });
+  });
+
+  return { disc, totalPlan, totalDone, sessionsPlanned, sessionsDone, adjustments, byDay };
+}
+
+function openWeekSummary() {
+  const wkIdx = currentWeek;
+  const wk = weeks[wkIdx];
+  const data = weekSummaryData(wkIdx);
+  const pct = data.totalPlan > 0 ? Math.round((data.totalDone / data.totalPlan) * 100) : 0;
+
+  document.getElementById('smTitle').textContent = 'WEEK ' + (wkIdx + 1) + ' SUMMARY · ' + wk.title;
+  document.getElementById('smSub').textContent = wk.phase + ' · ' + fmtDate(weekStartDate(wkIdx)) + ' — ' + fmtDate(weekEndDate(wkIdx));
+
+  // Ring
+  const CIRC = 2 * Math.PI * 34;
+  const ring = document.getElementById('smRing');
+  ring.setAttribute('stroke-dasharray', CIRC.toFixed(2));
+  const clamped = Math.max(0, Math.min(100, pct));
+  ring.setAttribute('stroke-dashoffset', (CIRC * (1 - clamped / 100)).toFixed(2));
+  document.getElementById('smRingText').textContent = pct + '%';
+  document.getElementById('smHeroStat').textContent = fmtHours(data.totalDone) + ' / ' + fmtHours(data.totalPlan);
+  document.getElementById('smHeroSub').textContent = data.sessionsDone + ' of ' + data.sessionsPlanned + ' sessions completed';
+
+  // Disciplines
+  const discEl = document.getElementById('smDisciplines');
+  discEl.innerHTML = '';
+  Object.keys(DISC_META).forEach(key => {
+    const d = data.disc[key];
+    if (!d || (d.plannedMins === 0 && d.doneMins === 0)) return;
+    const meta = DISC_META[key];
+    const p = d.plannedMins > 0 ? Math.round((d.doneMins / d.plannedMins) * 100) : (d.doneMins > 0 ? 100 : 0);
+    const distLine = (d.plannedDist > 0 || d.doneDist > 0)
+      ? ('<div class="disc-stat">' + fmtDist(key, d.doneDist) + ' / ' + fmtDist(key, d.plannedDist) + ' planned</div>')
+      : '';
+    discEl.insertAdjacentHTML('beforeend', `
+      <div class="disc-row">
+        <div class="disc-icon" style="background:${meta.bg};color:${meta.color};border:1px solid ${meta.border}">${meta.icon}</div>
+        <div class="disc-mid">
+          <div class="disc-name" style="color:${meta.color}">${meta.label}</div>
+          <div class="disc-stat"><strong>${fmtHours(d.doneMins)}</strong> / ${fmtHours(d.plannedMins)} · ${d.sessionsDone}/${d.sessionsPlanned} sessions</div>
+          ${distLine}
+          <div class="disc-bar"><div class="disc-bar-fill" style="width:${Math.min(100, p)}%;background:${meta.color}"></div></div>
+        </div>
+        <div class="disc-pct">${p}%</div>
+      </div>`);
+  });
+  if (!discEl.innerHTML) discEl.innerHTML = '<div class="day-empty">Rest / recovery week.</div>';
+
+  // Day-by-day
+  const daysEl = document.getElementById('smDays');
+  daysEl.innerHTML = '';
+  data.byDay.forEach(({ dayIdx, rows }) => {
+    const date = fmtDate(dayDate(wkIdx, dayIdx));
+    const daySum = document.createElement('div');
+    daySum.className = 'day-sum';
+    const rowsHtml = rows.length === 0
+      ? '<div class="day-sum-row rest">— nothing scheduled —</div>'
+      : rows.map(r => {
+          const w = r.workout, a = r.actual;
+          if (w.type === 'rest' && !hasAdjustment(w)) {
+            return '<div class="day-sum-row rest"><span class="tick"></span>Rest</div>';
+          }
+          let delta = '';
+          if (hasAdjustment(w)) {
+            const adj = state.adjustments[w.id];
+            if (adj.type && adj.type !== w.type) delta = '<span class="w-delta delta-swap">' + w.type + '→' + adj.type + '</span>';
+            else if (adj.mins != null && adj.mins > w.mins) delta = '<span class="w-delta delta-over">+' + Math.round(adj.mins - w.mins) + 'min</span>';
+            else if (adj.mins != null && adj.mins < w.mins) delta = '<span class="w-delta delta-under">' + Math.round(adj.mins - w.mins) + 'min</span>';
+          }
+          const distBit = (a.distance != null) ? (' · ' + fmtDist(a.type, a.distance)) : '';
+          return '<div class="day-sum-row' + (r.done ? ' done' : '') + '">'
+            + '<span class="tick"></span>'
+            + '<span class="w-name">' + w.title + '</span>'
+            + '<span style="color:var(--text-mute)"> · ' + (a.mins || 0) + 'min' + distBit + '</span>'
+            + delta + '</div>';
+        }).join('');
+    daySum.innerHTML = '<div class="day-sum-head"><span>' + DAYS[dayIdx] + '</span><span class="day-sum-date">' + date + '</span></div>' + rowsHtml;
+    daysEl.appendChild(daySum);
+  });
+
+  // Adjustments list
+  const adjLabel = document.getElementById('smAdjLabel');
+  const adjEl = document.getElementById('smAdjustments');
+  if (data.adjustments.length) {
+    adjLabel.style.display = '';
+    adjEl.innerHTML = data.adjustments.map(a => {
+      const meta = DISC_META[a.actual.type] || { color: 'var(--text)' };
+      return '<div class="day-sum" style="border-color:var(--red-dim)">'
+        + '<div class="day-sum-head"><span>' + DAYS[a.dayIdx] + '</span><span class="day-sum-date" style="color:' + meta.color + '">' + a.actual.type.toUpperCase() + '</span></div>'
+        + '<div class="day-sum-row"><span class="w-name">' + a.workout.title + '</span></div>'
+        + '<div class="day-sum-row" style="color:var(--text-dim);font-size:10px">' + a.text + '</div>'
+        + '</div>';
+    }).join('');
+  } else {
+    adjLabel.style.display = 'none';
+    adjEl.innerHTML = '';
+  }
+
+  const root = document.getElementById('summaryModal');
+  root.classList.add('show');
+  root.setAttribute('aria-hidden', 'false');
+}
+
+function smInit() {
+  const root = document.getElementById('summaryModal');
+  document.getElementById('smClose').addEventListener('click', () => {
+    root.classList.remove('show');
+    root.setAttribute('aria-hidden', 'true');
+  });
+  root.addEventListener('click', (e) => {
+    if (e.target === root) { root.classList.remove('show'); root.setAttribute('aria-hidden', 'true'); }
+  });
+  const btn = document.getElementById('weekSummaryBtn');
+  if (btn) btn.addEventListener('click', openWeekSummary);
 }
 
 let dragging = null;
@@ -923,6 +1613,7 @@ function endDrag(x, y) {
     }
   }
   dragging.classList.remove('dragging');
+  dragging._suppressClick = true;
   dragging = null;
   if (dragGhost) { dragGhost.remove(); dragGhost = null; }
   document.querySelectorAll('.day.drop-target').forEach(d => d.classList.remove('drop-target'));
@@ -972,8 +1663,8 @@ document.getElementById('prevWeek').addEventListener('click', () => { if (curren
 document.getElementById('nextWeek').addEventListener('click', () => { if (currentWeek < weeks.length - 1) { currentWeek++; renderWeek(); } });
 document.querySelectorAll('.view-tab').forEach(t => t.addEventListener('click', () => setView(t.dataset.view)));
 document.getElementById('resetBtn').addEventListener('click', () => {
-  if (confirm('Reset all progress? This clears every checkmark and workout reorder.')) {
-    state = { completed: {}, swaps: {} };
+  if (confirm('Reset all progress? This clears every checkmark, adjustment, and workout reorder.')) {
+    state = { completed: {}, swaps: {}, adjustments: {} };
     saveState();
     renderWeek();
     renderOverview();
@@ -1024,6 +1715,8 @@ function setAppIcons() {
   loadState();
   injectLogos();
   setAppIcons();
+  wmInit();
+  smInit();
   renderWeek();
   renderOverview();
   renderStats();
