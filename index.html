@@ -270,6 +270,25 @@
   .summary-fab:active { transform: scale(0.98); }
   .summary-fab .fab-icon { font-size: 14px; }
 
+  .convert-btn { height: 24px; padding: 0 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-elev); color: var(--text-dim); font-size: 9px; font-weight: 700; letter-spacing: 1.2px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; line-height: 1; }
+  .convert-btn:active { transform: scale(0.94); background: var(--red-deep); color: var(--text); }
+  .convert-btn .ico { font-size: 11px; }
+
+  .conv-preview { padding: 14px; background: var(--bg-elev-2); border: 1px solid var(--border); border-radius: 12px; text-align: center; margin: 12px 0; min-height: 74px; display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+  .conv-side { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .conv-mins { font-size: 26px; font-weight: 900; color: var(--text); line-height: 1; }
+  .conv-label { font-size: 10px; letter-spacing: 1.5px; color: var(--text-mute); font-weight: 700; }
+  .conv-arrow { font-size: 22px; color: var(--red-glow); font-weight: 900; }
+  .conv-side.target .conv-mins { color: var(--red-glow); text-shadow: 0 0 16px var(--red-dim); }
+  .conv-picker { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .conv-opt { padding: 12px 8px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-elev-2); color: var(--text); font-size: 11px; font-weight: 700; letter-spacing: 1.2px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; transition: all 0.15s; }
+  .conv-opt:disabled { opacity: 0.3; cursor: not-allowed; }
+  .conv-opt.active { border-color: var(--red); background: linear-gradient(135deg, var(--red-deep), #2a0507); box-shadow: 0 0 0 1px var(--red-deep); }
+  .conv-opt.active .conv-opt-name { color: var(--red-glow); }
+  .conv-opt .conv-opt-ico { font-size: 18px; }
+  .conv-opt .conv-opt-name { font-size: 10px; letter-spacing: 1.2px; }
+  .conv-note { font-size: 10px; color: var(--text-mute); text-align: center; margin-top: 10px; letter-spacing: 0.4px; line-height: 1.4; }
+
   .workout.adjusted { border-color: var(--red-dim); background: linear-gradient(135deg, rgba(229,9,20,0.05), var(--bg-elev-2)); }
   .workout.adjusted .workout-title::after { content: ' ADJ'; font-size: 8px; letter-spacing: 1px; color: var(--red-glow); font-weight: 700; background: var(--red-deep); padding: 1px 4px; border-radius: 3px; margin-left: 4px; vertical-align: middle; }
 
@@ -432,6 +451,45 @@
     <div class="btn-row">
       <button class="btn btn-ghost" id="wmReset">RESET TO PLAN</button>
       <button class="btn btn-danger" id="wmDelete">REMOVE</button>
+    </div>
+  </div>
+</div>
+
+<!-- Convert discipline modal -->
+<div class="modal-backdrop" id="convertModal" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" style="max-width: 420px">
+    <button class="modal-close" id="cvClose" aria-label="Close">×</button>
+    <div class="modal-head">
+      <div style="flex:1">
+        <div class="modal-title">CONVERT WORKOUT</div>
+        <div class="modal-sub" id="cvSub">—</div>
+      </div>
+    </div>
+
+    <div class="conv-preview">
+      <div class="conv-side">
+        <div class="conv-mins" id="cvFromMins">—</div>
+        <div class="conv-label" id="cvFromLabel">—</div>
+      </div>
+      <div class="conv-arrow">→</div>
+      <div class="conv-side target">
+        <div class="conv-mins" id="cvToMins">—</div>
+        <div class="conv-label" id="cvToLabel">PICK ONE</div>
+      </div>
+    </div>
+
+    <div class="section-label">SWAP TO</div>
+    <div class="conv-picker" id="cvPicker">
+      <button class="conv-opt" data-target="run"><span class="conv-opt-ico" style="color:var(--run)">➤</span><span class="conv-opt-name">RUN</span></button>
+      <button class="conv-opt" data-target="bike"><span class="conv-opt-ico" style="color:var(--bike)">⚙</span><span class="conv-opt-name">BIKE</span></button>
+      <button class="conv-opt" data-target="swim"><span class="conv-opt-ico" style="color:var(--swim)">〰</span><span class="conv-opt-name">SWIM</span></button>
+    </div>
+
+    <div class="conv-note">Duration scales by a stress-per-minute ratio (run 80 · bike 70 · swim 70), rounded to 5 min, min 15 min.</div>
+
+    <div class="btn-row">
+      <button class="btn btn-ghost" id="cvCancel">CANCEL</button>
+      <button class="btn btn-primary" id="cvApply" disabled>APPLY</button>
     </div>
   </div>
 </div>
@@ -724,6 +782,26 @@ function schedulePush() {
   pushTimer = setTimeout(syncPush, 1000);
 }
 
+// ── Discipline conversion (stress-per-minute model) ──────────────────
+// Rates are a per-minute training-stress proxy at moderate effort. Higher =
+// harder per unit time. Target time is computed so stress matches the source:
+//   target_minutes = source_minutes × (source_rate / target_rate), rounded to
+//   the nearest 5, floored at 15.
+// Values sit between strict TRIMP (1:1) and Friel's TSS (which penalises run
+// more) — deliberately conservative to keep substitutions feasible.
+const CONV_RATE = { run: 80, bike: 70, swim: 70 };
+
+function convertDuration(sourceMinutes, source, target) {
+  if (source === target) return sourceMinutes;
+  const sr = CONV_RATE[source], tr = CONV_RATE[target];
+  if (!sr || !tr) return sourceMinutes;
+  const converted = sourceMinutes * (sr / tr);
+  // Round to nearest 5, with exact-half ties rounding DOWN (matches the
+  // spec's expected bike→run 60→50, swim→run 60→50 where the raw result
+  // is 52.5 — a tie between 50 and 55).
+  return Math.max(15, Math.round(converted / 5 - 1e-9) * 5);
+}
+
 // ── Effective workout (planned + adjustment) ──────────────────────────
 // Adjustments are stored by workout id as { type, mins, distance, notes }.
 // Any field can be null/undefined — missing fields fall back to the plan.
@@ -1000,6 +1078,10 @@ function renderWeek() {
       const distChip = (a.distance != null) ? ` <span class="sep">·</span>${fmtDist(displayType, a.distance)}` : '';
       const swapTag = typeSwapped ? ` <span class="sep">·</span>was ${wk.type}` : '';
 
+      const convertable = CONV_RATE[displayType] != null || displayType === 'brick';
+      const convertBtnHtml = convertable
+        ? `<button class="convert-btn" data-wid="${wk.id}" aria-label="Convert workout"><span class="ico">↻</span>CONVERT</button>`
+        : '';
       wEl.innerHTML = `
         <div class="workout-head">
           <div class="workout-type-icon ${typeClass(displayType)}">${typeIcon(displayType)}</div>
@@ -1007,6 +1089,7 @@ function renderWeek() {
             <div class="workout-title">${wk.title}</div>
             <div class="workout-meta">${displayType.toUpperCase()}${displayMins ? `<span class="sep">·</span>${displayMins}min` : ''}${distChip}${swapTag}</div>
           </div>
+          ${convertBtnHtml}
           <div class="drag-handle">⋮⋮</div>
           <button class="check-btn" data-wid="${wk.id}" aria-label="Mark done">
             <svg viewBox="0 0 24 24"><polyline points="4,13 10,19 20,6"/></svg>
@@ -1049,8 +1132,16 @@ function wireWorkoutInteractions(wEl) {
     toggleComplete(wEl, wid);
   });
 
+  const convBtn = wEl.querySelector('.convert-btn');
+  if (convBtn) {
+    convBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openConvertModal(parseInt(wEl.dataset.wkIdx, 10), parseInt(wEl.dataset.dayIdx, 10), wid);
+    });
+  }
+
   wEl.addEventListener('click', (e) => {
-    if (e.target.closest('.check-btn') || e.target.closest('.drag-handle')) return;
+    if (e.target.closest('.check-btn') || e.target.closest('.drag-handle') || e.target.closest('.convert-btn')) return;
     // Suppress the click fired at the end of a drag gesture.
     if (wEl._suppressClick) { wEl._suppressClick = false; return; }
     openWorkoutModal(parseInt(wEl.dataset.wkIdx, 10), parseInt(wEl.dataset.dayIdx, 10), wid);
@@ -1517,6 +1608,104 @@ function smInit() {
   if (btn) btn.addEventListener('click', openWeekSummary);
 }
 
+// ── Convert workout modal ────────────────────────────────────────────
+let cvCurrent = null; // { wkIdx, dayIdx, workout, sourceType, sourceMins, targetType }
+
+function cvInit() {
+  const root = document.getElementById('convertModal');
+  document.getElementById('cvClose').addEventListener('click', closeConvertModal);
+  document.getElementById('cvCancel').addEventListener('click', closeConvertModal);
+  root.addEventListener('click', (e) => { if (e.target === root) closeConvertModal(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && root.classList.contains('show')) closeConvertModal();
+  });
+  document.querySelectorAll('#cvPicker .conv-opt').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.disabled) return;
+      selectConvertTarget(btn.dataset.target);
+    });
+  });
+  document.getElementById('cvApply').addEventListener('click', applyConvert);
+}
+
+function openConvertModal(wkIdx, dayIdx, wid) {
+  const day = getAllDays(wkIdx)[dayIdx] || [];
+  const workout = day.find(w => w.id === wid);
+  if (!workout) return;
+  const a = getActual(workout);
+  // Source type for the math: brick is essentially a bike workout.
+  const sourceType = CONV_RATE[a.type] ? a.type : (a.type === 'brick' ? 'bike' : null);
+  if (!sourceType) return;
+
+  cvCurrent = {
+    wkIdx, dayIdx, workout,
+    sourceType,
+    sourceMins: a.mins || 0,
+    targetType: null
+  };
+
+  document.getElementById('cvSub').textContent = workout.title;
+  document.getElementById('cvFromMins').textContent = cvCurrent.sourceMins + ' min';
+  document.getElementById('cvFromLabel').textContent = sourceType.toUpperCase();
+  document.getElementById('cvToMins').textContent = '—';
+  document.getElementById('cvToLabel').textContent = 'PICK ONE';
+
+  // Disable the source option, reset selection highlight, disable Apply
+  document.querySelectorAll('#cvPicker .conv-opt').forEach(btn => {
+    btn.classList.remove('active');
+    btn.disabled = (btn.dataset.target === sourceType);
+  });
+  document.getElementById('cvApply').disabled = true;
+
+  const root = document.getElementById('convertModal');
+  root.classList.add('show');
+  root.setAttribute('aria-hidden', 'false');
+}
+
+function closeConvertModal() {
+  const root = document.getElementById('convertModal');
+  root.classList.remove('show');
+  root.setAttribute('aria-hidden', 'true');
+  cvCurrent = null;
+}
+
+function selectConvertTarget(target) {
+  if (!cvCurrent) return;
+  cvCurrent.targetType = target;
+  const newMins = convertDuration(cvCurrent.sourceMins, cvCurrent.sourceType, target);
+  document.getElementById('cvToMins').textContent = newMins + ' min';
+  document.getElementById('cvToLabel').textContent = target.toUpperCase();
+  document.querySelectorAll('#cvPicker .conv-opt').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.target === target);
+  });
+  document.getElementById('cvApply').disabled = false;
+}
+
+function applyConvert() {
+  if (!cvCurrent || !cvCurrent.targetType) return;
+  const { workout, sourceType, sourceMins, targetType } = cvCurrent;
+  const newMins = convertDuration(sourceMins, sourceType, targetType);
+
+  // Save as an adjustment so existing stats/summary/sync pick it up.
+  const existing = state.adjustments[workout.id] || {};
+  const adj = { ...existing };
+  if (targetType !== workout.type) adj.type = targetType;
+  else delete adj.type;
+  if (newMins !== workout.mins) adj.mins = newMins;
+  else delete adj.mins;
+  // A convert changes the session itself, so planned distance no longer applies.
+  delete adj.distance;
+
+  if (Object.keys(adj).length === 0) delete state.adjustments[workout.id];
+  else state.adjustments[workout.id] = adj;
+
+  saveState();
+  renderWeek();
+  renderStats();
+  showToast('CONVERTED TO ' + targetType.toUpperCase());
+  closeConvertModal();
+}
+
 let dragging = null;
 let dragGhost = null;
 let dragOrigin = null;
@@ -1717,6 +1906,7 @@ function setAppIcons() {
   setAppIcons();
   wmInit();
   smInit();
+  cvInit();
   renderWeek();
   renderOverview();
   renderStats();
