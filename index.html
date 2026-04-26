@@ -143,6 +143,11 @@
 
   .day-empty { padding: 14px; text-align: center; font-size: 10px; color: var(--text-mute); border: 1px dashed var(--border); border-radius: 10px; letter-spacing: 1.5px; }
 
+  .day-add-btn { width: 100%; margin-top: 6px; padding: 8px 10px; background: transparent; border: 1px dashed var(--border); border-radius: 8px; color: var(--text-mute); font-size: 10px; font-weight: 700; letter-spacing: 1.4px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .day-add-btn:active { transform: scale(0.99); }
+  .day-add-btn:hover, .day.today .day-add-btn { border-color: var(--red-dim); color: var(--red-glow); background: rgba(229,9,20,0.04); }
+  .day-add-btn .plus { font-size: 13px; line-height: 1; }
+
   .remove-btn { margin-top: 10px; padding: 7px 12px; font-size: 10px; font-weight: 700; letter-spacing: 1.2px; color: white; background: linear-gradient(135deg, var(--red-deep), var(--red)); border: 1px solid var(--red-dim); border-radius: 6px; cursor: pointer; transition: all 0.15s; opacity: 0.85; }
   .remove-btn:hover { opacity: 1; box-shadow: 0 0 10px var(--red-dim); }
   .remove-btn:active { transform: scale(0.96); }
@@ -455,6 +460,70 @@
   </div>
 </div>
 
+<!-- Add workout modal -->
+<div class="modal-backdrop" id="addModal" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" style="max-width: 460px">
+    <button class="modal-close" id="amClose" aria-label="Close">×</button>
+    <div class="modal-head">
+      <div style="flex:1">
+        <div class="modal-title">ADD WORKOUT</div>
+        <div class="modal-sub" id="amSub">—</div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="field" style="flex:1">
+        <label>TYPE</label>
+        <select id="amType">
+          <option value="run">Run</option>
+          <option value="bike">Bike</option>
+          <option value="swim">Swim</option>
+          <option value="brick">Brick</option>
+          <option value="strength">Strength</option>
+          <option value="rest">Rest</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field" style="margin-top:10px">
+      <label>TITLE</label>
+      <input id="amTitle" type="text" placeholder="e.g. Easy run 30min">
+    </div>
+
+    <div class="form-grid" style="margin-top:10px">
+      <div class="field">
+        <label>TIME <span class="unit">min</span></label>
+        <input id="amMins" type="number" inputmode="decimal" step="1" min="0" placeholder="30">
+      </div>
+      <div class="field">
+        <label>DISTANCE <span class="unit" id="amDistUnit">km</span></label>
+        <input id="amDistance" type="number" inputmode="decimal" step="0.1" min="0" placeholder="—">
+      </div>
+      <div class="field">
+        <label>INTENSITY</label>
+        <select id="amIntensity">
+          <option value="">—</option>
+          <option value="Z1">Z1 · recovery</option>
+          <option value="Z2">Z2 · endurance</option>
+          <option value="Z3">Z3 · tempo</option>
+          <option value="Z4">Z4 · threshold</option>
+          <option value="Z5">Z5 · VO2</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field" style="margin-top:10px">
+      <label>NOTES <span class="unit">optional</span></label>
+      <textarea id="amNotes" placeholder="What's the session about?"></textarea>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-ghost" id="amCancel">CANCEL</button>
+      <button class="btn btn-primary" id="amSubmit">ADD TO DAY</button>
+    </div>
+  </div>
+</div>
+
 <!-- Convert discipline modal -->
 <div class="modal-backdrop" id="convertModal" aria-hidden="true">
   <div class="modal" role="dialog" aria-modal="true" style="max-width: 420px">
@@ -661,10 +730,34 @@ function loadState() {
   } catch (e) {
     state = { completed: {}, swaps: {}, adjustments: {} };
   }
+  currentWeek = computeCurrentWeek();
+}
+
+// Determine which week index "today" belongs to. Clamps to the plan range.
+function computeCurrentWeek() {
   const today = new Date();
-  const daysSinceStart = Math.floor((today - START_DATE) / (1000*60*60*24));
-  if (daysSinceStart >= 0) {
-    currentWeek = Math.min(20, Math.floor(daysSinceStart / 7));
+  const daysSinceStart = Math.floor((today - START_DATE) / (1000 * 60 * 60 * 24));
+  if (daysSinceStart < 0) return 0;
+  return Math.min(weeks.length - 1, Math.floor(daysSinceStart / 7));
+}
+
+// PWAs and home-screen apps can stay alive across day/week rollovers.
+// When the tab becomes visible (or regains focus), if the calendar week
+// has moved on, jump the view to the new current week so the user opens
+// the app and sees today, not last week.
+let _lastSeenDate = new Date().toDateString();
+function maybeRolloverWeek() {
+  const todayStr = new Date().toDateString();
+  if (todayStr === _lastSeenDate) return;
+  _lastSeenDate = todayStr;
+  const newWeek = computeCurrentWeek();
+  if (newWeek !== currentWeek) {
+    currentWeek = newWeek;
+    if (currentView === 'week') renderWeek();
+    if (currentView === 'overview') renderOverview();
+  } else if (currentView === 'week') {
+    // Same week, but the "today" highlight on day cards should refresh.
+    renderWeek();
   }
 }
 
@@ -1098,6 +1191,16 @@ function renderWeek() {
       woutsContainer.appendChild(wEl);
       wireWorkoutInteractions(wEl);
     });
+
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'day-add-btn';
+    addBtn.innerHTML = '<span class="plus">+</span>ADD WORKOUT';
+    addBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openAddModal(currentWeek, dayIdx);
+    });
+    woutsContainer.appendChild(addBtn);
 
     daysEl.appendChild(dayEl);
   });
@@ -1706,6 +1809,131 @@ function applyConvert() {
   closeConvertModal();
 }
 
+// ── Add workout modal ────────────────────────────────────────────────
+let amCurrent = null; // { wkIdx, dayIdx }
+
+// User-added workouts need IDs that survive a reload. The default newId()
+// counter resets on each page load, so its t1, t2, … get re-assigned to the
+// hard-coded plan workouts. Use a 'u' prefix + timestamp + entropy to avoid
+// collisions both with each other and with the planning IDs.
+function newUserWorkoutId() {
+  return 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+const TYPE_DEFAULTS = {
+  run:      { title: 'Easy run',          mins: 30, distance: '' },
+  bike:     { title: 'Endurance ride',    mins: 60, distance: '' },
+  swim:     { title: 'Endurance swim',    mins: 30, distance: '' },
+  brick:    { title: 'Brick: bike + run', mins: 60, distance: '' },
+  strength: { title: 'Strength & core',   mins: 20, distance: '' },
+  rest:     { title: 'Rest day',          mins: 0,  distance: '' }
+};
+
+function amInit() {
+  const root = document.getElementById('addModal');
+  document.getElementById('amClose').addEventListener('click', closeAddModal);
+  document.getElementById('amCancel').addEventListener('click', closeAddModal);
+  root.addEventListener('click', (e) => { if (e.target === root) closeAddModal(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && root.classList.contains('show')) closeAddModal();
+  });
+
+  const typeEl = document.getElementById('amType');
+  typeEl.addEventListener('change', amApplyTypeDefaults);
+  document.getElementById('amSubmit').addEventListener('click', submitAddWorkout);
+}
+
+function openAddModal(wkIdx, dayIdx) {
+  amCurrent = { wkIdx, dayIdx };
+  document.getElementById('amSub').textContent = DAYS[dayIdx] + ' · ' + fmtDate(dayDate(wkIdx, dayIdx));
+  document.getElementById('amType').value = 'run';
+  document.getElementById('amNotes').value = '';
+  document.getElementById('amIntensity').value = '';
+  document.getElementById('amDistance').value = '';
+  // Reset title + mins to "from-default" state so the type-default logic repopulates them.
+  const titleEl = document.getElementById('amTitle');
+  titleEl.value = ''; titleEl.dataset.fromDefault = '1';
+  const minsEl = document.getElementById('amMins');
+  minsEl.value = ''; minsEl.dataset.fromDefault = '1';
+  amApplyTypeDefaults();
+  const root = document.getElementById('addModal');
+  root.classList.add('show');
+  root.setAttribute('aria-hidden', 'false');
+  // Focus title for fast entry
+  setTimeout(() => { try { titleEl.focus(); titleEl.select(); } catch(e){} }, 80);
+}
+
+function closeAddModal() {
+  const root = document.getElementById('addModal');
+  root.classList.remove('show');
+  root.setAttribute('aria-hidden', 'true');
+  amCurrent = null;
+}
+
+function amApplyTypeDefaults() {
+  const t = document.getElementById('amType').value;
+  const def = TYPE_DEFAULTS[t] || TYPE_DEFAULTS.run;
+  // Only overwrite values if they're empty / still at a previous default — don't blow
+  // away the user's custom title or duration if they typed something specific.
+  const titleEl = document.getElementById('amTitle');
+  if (!titleEl.value || titleEl.dataset.fromDefault === '1') {
+    titleEl.value = def.title;
+    titleEl.dataset.fromDefault = '1';
+  }
+  titleEl.addEventListener('input', () => { titleEl.dataset.fromDefault = '0'; }, { once: true });
+  const minsEl = document.getElementById('amMins');
+  if (!minsEl.value || minsEl.dataset.fromDefault === '1') {
+    minsEl.value = def.mins || '';
+    minsEl.dataset.fromDefault = '1';
+  }
+  minsEl.addEventListener('input', () => { minsEl.dataset.fromDefault = '0'; }, { once: true });
+  const distEl = document.getElementById('amDistance');
+  document.getElementById('amDistUnit').textContent = distUnit(t) || '—';
+  distEl.disabled = !distUnit(t);
+}
+
+function submitAddWorkout() {
+  if (!amCurrent) return;
+  const type = document.getElementById('amType').value;
+  const title = (document.getElementById('amTitle').value || '').trim() || (TYPE_DEFAULTS[type]?.title || 'Workout');
+  const mins = parseFloat(document.getElementById('amMins').value);
+  const distRaw = parseFloat(document.getElementById('amDistance').value);
+  const intensity = document.getElementById('amIntensity').value;
+  const notes = (document.getElementById('amNotes').value || '').trim();
+  const minsClean = (isFinite(mins) && mins >= 0) ? Math.round(mins) : 0;
+
+  // Build description from intensity + notes for the modal/desc display.
+  const descParts = [];
+  if (intensity) descParts.push(intensity + ' effort.');
+  if (notes) descParts.push(notes);
+  const desc = descParts.join(' ');
+
+  const newW = {
+    id: newUserWorkoutId(),
+    type,
+    title,
+    mins: minsClean,
+    desc
+  };
+
+  // Persist into state.swaps (creating the per-week copy on first edit).
+  const days = getAllDays(amCurrent.wkIdx).map(d => [...d]);
+  days[amCurrent.dayIdx].push(newW);
+  state.swaps[amCurrent.wkIdx] = days;
+
+  // If the user provided a distance, store it as an adjustment so the card
+  // shows it in the meta line and it counts in the summary.
+  if (isFinite(distRaw) && distRaw > 0 && distUnit(type)) {
+    state.adjustments[newW.id] = { distance: distRaw };
+  }
+
+  saveState();
+  renderWeek();
+  renderStats();
+  showToast('WORKOUT ADDED');
+  closeAddModal();
+}
+
 let dragging = null;
 let dragGhost = null;
 let dragOrigin = null;
@@ -1907,12 +2135,15 @@ function setAppIcons() {
   wmInit();
   smInit();
   cvInit();
+  amInit();
   renderWeek();
   renderOverview();
   renderStats();
   syncPull();
   setInterval(syncPull, 30000);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) syncPull(); });
+  setInterval(maybeRolloverWeek, 60000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { maybeRolloverWeek(); syncPull(); } });
+  window.addEventListener('focus', maybeRolloverWeek);
   window.addEventListener('online', syncPull);
   window.addEventListener('offline', () => setSyncStatus('offline'));
 })();
