@@ -585,7 +585,7 @@
           <div class="ring-text" id="smRingText">0%</div>
         </div>
         <div class="sum-hero-info">
-          <div class="sum-hero-title">VOLUME COMPLETED</div>
+          <div class="sum-hero-title">AEROBIC VOLUME</div>
           <div class="sum-hero-stat" id="smHeroStat">—</div>
           <div class="sum-hero-sub" id="smHeroSub">—</div>
         </div>
@@ -710,6 +710,26 @@ const weeks = [
   { phase: 'RACE WEEK', title: '🏁 BELGRADE — 13 SEP', note: 'Travel Wednesday. Short race-pace touches only. Hydrate like it\'s your job. Carb-load Fri–Sat. You are ready.', icon: '★',
     days: [ [rest('Packing day.')], [SWIM_TECH(25, 1000), RUN_EASY(20)], [BIKE_Z2(40, null)], [rest('✈ Travel to Belgrade.')], [SWIM_TECH(20, 800), RUN_EASY(15, null)], [BIKE_Z2(25), rest('Race check-in. Early to bed.')], [w('brick', '🏁 RACE DAY — IRONMAN 70.3 BELGRADE', 330, 'Swim 1.9km · Bike 90km · Run 21.1km. Pacing: swim relaxed, bike at 75–80% FTP / RPE 6–7, run first 3km easy then settle into goal pace. You have trained for this. Go execute.')] ] }
 ];
+
+// User preference: swims on Wed (2) and Fri (4) starting from W4 (index 3).
+// Programmatic transform on the source plan — workout IDs are preserved so
+// completions/adjustments still apply. User's own day-swaps in state.swaps
+// take precedence (their explicit moves win over this default).
+const SWIM_DAY_PREF_FROM_WEEK = 3;
+(function applySwimDayPreference() {
+  for (let i = SWIM_DAY_PREF_FROM_WEEK; i < weeks.length; i++) {
+    const days = weeks[i].days;
+    const hasSwim = (d) => d.some(w => w.type === 'swim');
+    // Move Tue → Wed swim
+    if (hasSwim(days[1]) && !hasSwim(days[2])) {
+      const t = days[1]; days[1] = days[2]; days[2] = t;
+    }
+    // Move Thu → Fri swim
+    if (hasSwim(days[3]) && !hasSwim(days[4])) {
+      const t = days[3]; days[3] = days[4]; days[4] = t;
+    }
+  }
+})();
 
 let state = { completed: {}, swaps: {}, adjustments: {} };
 let currentWeek = 0;
@@ -1038,9 +1058,14 @@ function weekEndDate(wkIdx) { const d = weekStartDate(wkIdx); d.setDate(d.getDat
 function dayDate(wkIdx, dayIdx) { const d = weekStartDate(wkIdx); d.setDate(d.getDate() + dayIdx); return d; }
 function isToday(wkIdx, dayIdx) { const today = new Date(); const d = dayDate(wkIdx, dayIdx); return today.toDateString() === d.toDateString(); }
 
+// "Aerobic" = swim/bike/run/brick. Strength is supplemental and excluded from
+// the volume rings/bars so weekly volume reflects swim+bike+run training time.
+const AEROBIC_TYPES = new Set(['swim', 'bike', 'run', 'brick']);
+function isAerobic(type) { return AEROBIC_TYPES.has(type); }
+
 function weekMinutes(wkIdx) {
   let total = 0;
-  getAllDays(wkIdx).forEach(day => day.forEach(w => { total += w.mins || 0; }));
+  getAllDays(wkIdx).forEach(day => day.forEach(w => { if (isAerobic(w.type)) total += w.mins || 0; }));
   return total;
 }
 
@@ -1048,10 +1073,26 @@ function weekCompletedMinutes(wkIdx) {
   let total = 0;
   getAllDays(wkIdx).forEach(day => {
     day.forEach(w => {
-      if (state.completed[w.id]) total += getActual(w).mins || 0;
+      if (state.completed[w.id]) {
+        const a = getActual(w);
+        if (isAerobic(a.type)) total += a.mins || 0;
+      }
     });
   });
   return total;
+}
+
+// Total strength minutes (planned + done) for a week. Reported separately.
+function weekStrengthMinutes(wkIdx) {
+  let planned = 0, done = 0;
+  getAllDays(wkIdx).forEach(day => day.forEach(w => {
+    if (w.type === 'strength') planned += w.mins || 0;
+    if (state.completed[w.id]) {
+      const a = getActual(w);
+      if (a.type === 'strength') done += a.mins || 0;
+    }
+  }));
+  return { planned, done };
 }
 
 function weekSessionCount(wkIdx) {
@@ -1549,8 +1590,12 @@ function weekSummaryData(wkIdx) {
   const disc = {};
   const ensure = (key) => (disc[key] = disc[key] || { plannedMins: 0, doneMins: 0, plannedDist: 0, doneDist: 0, sessionsPlanned: 0, sessionsDone: 0 });
 
-  let totalPlan = 0, totalDone = 0;
+  // "Volume" = aerobic time only (swim/bike/run/brick). Strength time is
+  // tracked separately so it doesn't dominate the completion ring.
+  let aerobicPlan = 0, aerobicDone = 0;
+  let strengthPlan = 0, strengthDone = 0;
   let sessionsPlanned = 0, sessionsDone = 0;
+  let aerobicSessionsPlanned = 0, aerobicSessionsDone = 0;
   const adjustments = [];
   const byDay = [];
 
@@ -1562,8 +1607,13 @@ function weekSummaryData(wkIdx) {
       const actualDist = a.distance != null ? a.distance : null;
 
       if (w.type !== 'rest') {
-        totalPlan += w.mins || 0;
         sessionsPlanned++;
+        if (isAerobic(w.type)) {
+          aerobicPlan += w.mins || 0;
+          aerobicSessionsPlanned++;
+        } else if (w.type === 'strength') {
+          strengthPlan += w.mins || 0;
+        }
         const key = w.type in DISC_META ? w.type : null;
         if (key) {
           ensure(key);
@@ -1575,8 +1625,13 @@ function weekSummaryData(wkIdx) {
 
       const done = !!state.completed[w.id];
       if (done) {
-        totalDone += a.mins || 0;
         if (a.type !== 'rest') sessionsDone++;
+        if (isAerobic(a.type)) {
+          aerobicDone += a.mins || 0;
+          aerobicSessionsDone++;
+        } else if (a.type === 'strength') {
+          strengthDone += a.mins || 0;
+        }
         const akey = a.type in DISC_META ? a.type : null;
         if (akey) {
           ensure(akey);
@@ -1604,14 +1659,21 @@ function weekSummaryData(wkIdx) {
     byDay.push({ dayIdx: di, rows });
   });
 
-  return { disc, totalPlan, totalDone, sessionsPlanned, sessionsDone, adjustments, byDay };
+  return {
+    disc, adjustments, byDay,
+    aerobicPlan, aerobicDone,
+    strengthPlan, strengthDone,
+    sessionsPlanned, sessionsDone,
+    aerobicSessionsPlanned, aerobicSessionsDone
+  };
 }
 
 function openWeekSummary() {
   const wkIdx = currentWeek;
   const wk = weeks[wkIdx];
   const data = weekSummaryData(wkIdx);
-  const pct = data.totalPlan > 0 ? Math.round((data.totalDone / data.totalPlan) * 100) : 0;
+  // Volume ring is aerobic-only (swim/bike/run/brick). Strength reported below.
+  const pct = data.aerobicPlan > 0 ? Math.round((data.aerobicDone / data.aerobicPlan) * 100) : 0;
 
   document.getElementById('smTitle').textContent = 'WEEK ' + (wkIdx + 1) + ' SUMMARY · ' + wk.title;
   document.getElementById('smSub').textContent = wk.phase + ' · ' + fmtDate(weekStartDate(wkIdx)) + ' — ' + fmtDate(weekEndDate(wkIdx));
@@ -1623,8 +1685,11 @@ function openWeekSummary() {
   const clamped = Math.max(0, Math.min(100, pct));
   ring.setAttribute('stroke-dashoffset', (CIRC * (1 - clamped / 100)).toFixed(2));
   document.getElementById('smRingText').textContent = pct + '%';
-  document.getElementById('smHeroStat').textContent = fmtHours(data.totalDone) + ' / ' + fmtHours(data.totalPlan);
-  document.getElementById('smHeroSub').textContent = data.sessionsDone + ' of ' + data.sessionsPlanned + ' sessions completed';
+  document.getElementById('smHeroStat').textContent = fmtHours(data.aerobicDone) + ' / ' + fmtHours(data.aerobicPlan);
+  const strengthBit = (data.strengthPlan > 0 || data.strengthDone > 0)
+    ? ' · ' + fmtHours(data.strengthDone) + ' strength'
+    : '';
+  document.getElementById('smHeroSub').textContent = data.aerobicSessionsDone + ' of ' + data.aerobicSessionsPlanned + ' aerobic sessions' + strengthBit;
 
   // Disciplines
   const discEl = document.getElementById('smDisciplines');
